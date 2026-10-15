@@ -1,0 +1,2 @@
+loadstring([[
+local P=game.Players local PG=game:GetService("PlayerGui")local RS=game:GetService("RunService")local UIS=game:GetService("UserInputService")local TS=game:GetService("TweenService") local LP=P.LocalPlayer if not LP
