@@ -1,0 +1,253 @@
+--[[
+    PAINEL DARKZIN - Animal Simulator
+    Desenvolvido para Delta Executor
+    Funcionalidades: Auto Collect Coins & Auto Kill Bosses
+]]
+
+-- Configurações de Cores e Estética
+local Colors = {
+    Background = Color3.fromRGB(25, 25, 25),
+    Accent = Color3.fromRGB(138, 43, 226), -- Roxo
+    Danger = Color3.fromRGB(200, 0, 0),    -- Vermelho
+    Text = Color3.fromRGB(255, 255, 255),
+    Secondary = Color3.fromRGB(45, 45, 45)
+}
+
+-- Variáveis de Estado
+getgenv().Darkzin_AutoCoin = false
+getgenv().Darkzin_AutoBoss = false
+
+-- Serviços do Roblox
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+
+-- Interface Gráfica (GUI)
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "PainelDarkzinGui"
+ScreenGui.Parent = (game:GetService("CoreGui") or LocalPlayer:WaitForChild("PlayerGui"))
+ScreenGui.ResetOnSpawn = false
+
+-- Frame Principal
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 300, 0, 400)
+MainFrame.Position = UDim2.new(0.5, -150, 0.5, -200)
+MainFrame.BackgroundColor3 = Colors.Background
+MainFrame.BorderSizePixel = 0
+MainFrame.ClipsDescendants = true
+MainFrame.Parent = ScreenGui
+
+-- Arredondamento e Sombra
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 12)
+UICorner.Parent = MainFrame
+
+local UIStroke = Instance.new("UIStroke")
+UIStroke.Thickness = 2
+UIStroke.Color = Colors.Accent
+UIStroke.Parent = MainFrame
+
+-- Barra de Título
+local TitleBar = Instance.new("Frame")
+TitleBar.Name = "TitleBar"
+TitleBar.Size = UDim2.new(1, 0, 0, 40)
+TitleBar.BackgroundColor3 = Colors.Secondary
+TitleBar.BorderSizePixel = 0
+TitleBar.Parent = MainFrame
+
+local TitleCorner = Instance.new("UICorner")
+TitleCorner.CornerRadius = UDim.new(0, 12)
+TitleCorner.Parent = TitleBar
+
+local TitleText = Instance.new("TextLabel")
+TitleText.Text = "PAINEL DARKZIN"
+TitleText.Size = UDim2.new(1, -80, 1, 0)
+TitleText.Position = UDim2.new(0, 15, 0, 0)
+TitleText.TextColor3 = Colors.Text
+TitleText.TextXAlignment = Enum.TextXAlignment.Left
+TitleText.Font = Enum.Font.GothamBold
+TitleText.TextSize = 18
+TitleText.BackgroundTransparency = 1
+TitleText.Parent = TitleBar
+
+-- Botão Minimizar
+local MinBtn = Instance.new("TextButton")
+MinBtn.Text = "-"
+MinBtn.Size = UDim2.new(0, 30, 0, 30)
+MinBtn.Position = UDim2.new(1, -35, 0, 5)
+MinBtn.BackgroundColor3 = Colors.Secondary
+MinBtn.TextColor3 = Colors.Text
+MinBtn.Font = Enum.Font.GothamBold
+MinBtn.Parent = TitleBar
+
+local MinCorner = Instance.new("UICorner")
+MinCorner.CornerRadius = UDim.new(0, 8)
+MinCorner.Parent = MinBtn
+
+-- Container de Funções
+local ContentFrame = Instance.new("ScrollingFrame")
+ContentFrame.Size = UDim2.new(1, -20, 1, -60)
+ContentFrame.Position = UDim2.new(0, 10, 0, 50)
+ContentFrame.BackgroundTransparency = 1
+ContentFrame.BorderSizePixel = 0
+ContentFrame.ScrollBarThickness = 4
+ContentFrame.Parent = MainFrame
+
+local UIList = Instance.new("UIListLayout")
+UIList.Padding = UDim.new(0, 10)
+UIList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+UIList.Parent = ContentFrame
+
+-- Função para criar botões de Toggle
+local function CreateToggle(name, callback)
+    local ToggleBtn = Instance.new("TextButton")
+    ToggleBtn.Size = UDim2.new(0, 260, 0, 45)
+    ToggleBtn.BackgroundColor3 = Colors.Secondary
+    ToggleBtn.Text = name .. ": OFF"
+    ToggleBtn.TextColor3 = Colors.Text
+    ToggleBtn.Font = Enum.Font.Gotham
+    ToggleBtn.TextSize = 14
+    ToggleBtn.Parent = ContentFrame
+
+    local TCorner = Instance.new("UICorner")
+    TCorner.CornerRadius = UDim.new(0, 8)
+    TCorner.Parent = ToggleBtn
+
+    local TStroke = Instance.new("UIStroke")
+    TStroke.Thickness = 1
+    TStroke.Color = Colors.Accent
+    TStroke.Parent = ToggleBtn
+
+    local state = false
+    ToggleBtn.MouseButton1Click:Connect(function()
+        state = not state
+        callback(state)
+        ToggleBtn.Text = name .. (state and ": ON" or ": OFF")
+        ToggleBtn.TextColor3 = state and Colors.Accent or Colors.Text
+        TStroke.Color = state and Colors.Accent or Colors.Secondary
+    end)
+end
+
+-- Lógica: Auto Coletar Moedas
+local function AutoCoinLogic(state)
+    getgenv().Darkzin_AutoCoin = state
+    task.spawn(function()
+        while getgenv().Darkzin_AutoCoin do
+            pcall(function()
+                local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                if not root then return end
+
+                -- Busca por moedas reais no Workspace do Animal Simulator
+                -- O jogo geralmente as coloca em pastas como 'Coins', 'CoinContainer' ou espalhadas no Workspace
+                for _, v in pairs(Workspace:GetDescendants()) do
+                    if not getgenv().Darkzin_AutoCoin then break end
+                    
+                    -- Verifica se o objeto é uma moeda real do jogo (baseado em nome ou classe)
+                    if v.Name == "Coin" or v:FindFirstChild("Coin") or (v:IsA("BasePart") and v.Name:find("Coin")) then
+                        -- Teleporta a moeda para o jogador (se o executor permitir) ou o jogador para a moeda
+                        if v:IsA("BasePart") then
+                            v.CFrame = root.CFrame
+                        elseif v:IsA("Model") and v.PrimaryPart then
+                            v.PrimaryPart.CFrame = root.CFrame
+                        end
+                    end
+                end
+            end)
+            task.wait() -- Velocidade máxima para coleta instantânea
+        end
+    end)
+end
+
+-- Lógica: Auto Matar Bosses
+local function AutoBossLogic(state)
+    getgenv().Darkzin_AutoBoss = state
+    task.spawn(function()
+        while getgenv().Darkzin_AutoBoss do
+            pcall(function()
+                -- Busca por entidades que contenham "Boss" no nome no Workspace
+                for _, v in pairs(Workspace:GetDescendants()) do
+                    if not getgenv().Darkzin_AutoBoss then break end
+                    if v:IsA("Model") and (v.Name:find("Boss") or v:FindFirstChild("Humanoid")) then
+                        local hum = v:FindFirstChildOfClass("Humanoid")
+                        local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                        
+                        if hum and hum.Health > 0 and root then
+                            root.CFrame = v.PrimaryPart and v.PrimaryPart.CFrame or v:FindFirstChildWhichIsA("BasePart").CFrame
+                            -- Simulação de ataque (depende da ferramenta equipada no jogo)
+                            local tool = LocalPlayer.Character:FindFirstChildOfClass("Tool")
+                            if tool then
+                                tool:Activate()
+                            end
+                        end
+                    end
+                end
+            end)
+            task.wait(0.5)
+        end
+    end)
+end
+
+-- Adicionando botões ao painel
+CreateToggle("Spawn Moedas", AutoCoinLogic)
+CreateToggle("Auto Matar Bosses", AutoBossLogic)
+
+-- Sistema de Arraste (Drag)
+local dragging, dragInput, dragStart, startPos
+TitleBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = MainFrame.Position
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - dragStart
+        MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = false
+    end
+end)
+
+-- Sistema de Minimizar/Restaurar
+local minimized = false
+MinBtn.MouseButton1Click:Connect(function()
+    minimized = not minimized
+    if minimized then
+        ContentFrame.Visible = false
+        MainFrame:TweenSize(UDim2.new(0, 300, 0, 40), "Out", "Quad", 0.3, true)
+    else
+        MainFrame:TweenSize(UDim2.new(0, 300, 0, 400), "Out", "Quad", 0.3, true)
+        task.wait(0.3)
+        ContentFrame.Visible = true
+    end
+end)
+
+-- Botão Flutuante para Abrir/Fechar (Toggle GUI)
+local ToggleGuiBtn = Instance.new("TextButton")
+ToggleGuiBtn.Name = "ToggleGui"
+ToggleGuiBtn.Size = UDim2.new(0, 50, 0, 50)
+ToggleGuiBtn.Position = UDim2.new(0, 10, 0.5, 0)
+ToggleGuiBtn.BackgroundColor3 = Colors.Accent
+ToggleGuiBtn.Text = "DZ"
+ToggleGuiBtn.TextColor3 = Colors.Text
+ToggleGuiBtn.Font = Enum.Font.GothamBold
+ToggleGuiBtn.Parent = ScreenGui
+
+local TGCorner = Instance.new("UICorner")
+TGCorner.CornerRadius = UDim.new(1, 0)
+TGCorner.Parent = ToggleGuiBtn
+
+ToggleGuiBtn.MouseButton1Click:Connect(function()
+    MainFrame.Visible = not MainFrame.Visible
+end)
+
+print("PAINEL DARKZIN carregado com sucesso!")
