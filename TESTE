@@ -1,0 +1,269 @@
+--[[
+    DARKZIN XIT - MM2 Edition
+    Destinado ao Delta Executor
+    Arquivo: darkzin_xit.lua
+]]
+
+local ScreenGui = Instance.new("ScreenGui")
+local MainFrame = Instance.new("Frame")
+local UICorner = Instance.new("UICorner")
+local Title = Instance.new("TextLabel")
+local TabContainer = Instance.new("Frame")
+local UIListLayout = Instance.new("UIListLayout")
+local ContentFrame = Instance.new("Frame")
+local ScrollFrame = Instance.new("ScrollingFrame")
+local UIListLayout_2 = Instance.new("UIListLayout")
+local CloseBtn = Instance.new("TextButton")
+local MinBtn = Instance.new("TextButton")
+local ReopenBtn = Instance.new("TextButton")
+
+-- Configurações de Estilo (Preto com Roxo Neon)
+local COLORS = {
+    Background = Color3.fromRGB(10, 10, 10),
+    Accent = Color3.fromRGB(160, 32, 240),
+    Text = Color3.fromRGB(255, 255, 255),
+    Secondary = Color3.fromRGB(20, 20, 20),
+    Murderer = Color3.fromRGB(255, 0, 0),
+    Sheriff = Color3.fromRGB(0, 0, 255),
+    Innocent = Color3.fromRGB(255, 255, 255)
+}
+
+local Settings = {
+    Aimbot = false,
+    ESP = false,
+    AutoArm = false
+}
+
+-- Inicialização da GUI
+ScreenGui.Name = "DarkzinXitGui"
+ScreenGui.Parent = game:GetService("CoreGui")
+ScreenGui.ResetOnSpawn = false
+
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = COLORS.Background
+MainFrame.BorderSizePixel = 0
+MainFrame.Position = UDim2.new(0.5, -225, 0.5, -150)
+MainFrame.Size = UDim2.new(0, 450, 0, 300)
+MainFrame.ZIndex = 10
+MainFrame.ClipsDescendants = true
+
+UICorner.CornerRadius = UDim.new(0, 10)
+UICorner.Parent = MainFrame
+
+Title.Name = "Title"
+Title.Parent = MainFrame
+Title.BackgroundColor3 = COLORS.Secondary
+Title.BorderSizePixel = 0
+Title.Size = UDim2.new(1, 0, 0, 40)
+Title.Font = Enum.Font.GothamBold
+Title.Text = "DARKZIN XIT"
+Title.TextColor3 = COLORS.Accent
+Title.TextSize = 18
+
+-- Botões de Controle
+CloseBtn.Name = "CloseBtn"
+CloseBtn.Parent = MainFrame
+CloseBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+CloseBtn.Position = UDim2.new(1, -35, 0, 5)
+CloseBtn.Size = UDim2.new(0, 25, 0, 25)
+CloseBtn.Text = "X"
+CloseBtn.TextColor3 = COLORS.Text
+CloseBtn.TextSize = 14
+
+MinBtn.Name = "MinBtn"
+MinBtn.Parent = MainFrame
+MinBtn.BackgroundColor3 = COLORS.Secondary
+MinBtn.Position = UDim2.new(1, -65, 0, 5)
+MinBtn.Size = UDim2.new(0, 25, 0, 25)
+MinBtn.Text = "-"
+MinBtn.TextColor3 = COLORS.Text
+MinBtn.TextSize = 14
+
+ReopenBtn.Name = "ReopenBtn"
+ReopenBtn.Parent = ScreenGui
+ReopenBtn.BackgroundColor3 = COLORS.Accent
+ReopenBtn.Position = UDim2.new(0, 10, 1, -50)
+ReopenBtn.Size = UDim2.new(0, 100, 0, 30)
+ReopenBtn.Text = "Reabrir"
+ReopenBtn.TextColor3 = COLORS.Text
+ReopenBtn.ZIndex = 11
+ReopenBtn.Visible = false
+
+-- Sistema de Abas
+TabContainer.Name = "TabContainer"
+TabContainer.Parent = MainFrame
+TabContainer.BackgroundColor3 = COLORS.Secondary
+TabContainer.Position = UDim2.new(0, 0, 0, 40)
+TabContainer.Size = UDim2.new(0, 130, 1, -40)
+UIListLayout.Parent = TabContainer
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+ContentFrame.Name = "ContentFrame"
+ContentFrame.Parent = MainFrame
+ContentFrame.BackgroundColor3 = COLORS.Background
+ContentFrame.Position = UDim2.new(0, 130, 0, 40)
+ContentFrame.Size = UDim2.new(1, -130, 1, -40)
+
+ScrollFrame.Parent = ContentFrame
+ScrollFrame.Size = UDim2.new(1, 0, 1, 0)
+ScrollFrame.BackgroundTransparency = 1
+ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+ScrollFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+ScrollFrame.ScrollBarThickness = 4
+
+UIListLayout_2.Parent = ScrollFrame
+UIListLayout_2.Padding = UDim.new(0, 10)
+UIListLayout_2.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+-- Função para criar botões de opção
+local function CreateToggle(name, settingKey, callback) 
+    local Btn = Instance.new("TextButton")
+    local Corner = Instance.new("UICorner")
+    
+    Btn.Name = name .. "Btn"
+    Btn.Parent = ScrollFrame
+    Btn.BackgroundColor3 = COLORS.Secondary
+    Btn.Size = UDim2.new(0, 220, 0, 35)
+    Btn.Font = Enum.Font.Gotham
+    Btn.Text = name .. ": OFF"
+    Btn.TextColor3 = COLORS.Text
+    Btn.TextSize = 14
+    
+    Corner.CornerRadius = UDim.new(0, 6)
+    Corner.Parent = Btn
+    
+    Btn.MouseButton1Click:Connect(function()
+        Settings[settingKey] = not Settings[settingKey]
+        Btn.Text = name .. ": " .. (Settings[settingKey] and "ON" or "OFF")
+        Btn.BackgroundColor3 = Settings[settingKey] and COLORS.Accent or COLORS.Secondary
+        if callback then callback(Settings[settingKey]) end
+    end)
+end
+
+-- Lógica das Opções (Demonstrações Visuais)
+CreateToggle("Aimbot (Lock)", "Aimbot", function()
+    print("[DARKZIN XIT] Aimbot " .. (Settings.Aimbot and "Ativado" or "Desativado"))
+end)
+
+CreateToggle("ESP (Roles)", "ESP", function()
+    print("[DARKZIN XIT] ESP " .. (Settings.ESP and "Ativado" or "Desativado"))
+end)
+
+CreateToggle("Auto Arm Weapon", "AutoArm", function()
+    print("[DARKZIN XIT] AutoArm " .. (Settings.AutoArm and "Ativado" or "Desativado"))
+end)
+
+CreateToggle("Reset Visuals", "Reset", function()
+    MainFrame.Position = UDim2.new(0.5, -225, 0.5, -150)
+    print("[DARKZIN XIT] Visuals Reset.")
+end)
+
+-- Eventos de Interface
+CloseBtn.MouseButton1Click:Connect(function()
+    MainFrame.Visible = false
+    ReopenBtn.Visible = true
+end)
+
+MinBtn.MouseButton1Click:Connect(function()
+    MainFrame:TweenSize(UDim2.new(0, 450, 0, 40), "Out", "Quad", 0.3, true)
+end)
+
+ReopenBtn.MouseButton1Click:Connect(function()
+    MainFrame.Visible = true
+    ReopenBtn.Visible = false
+end)
+
+-- Diagnóstico de Inicialização
+local function Diagnostic()
+    local success, err = pcall(function()
+        print("[DARKZIN XIT] Verificando ambiente Delta...")
+        if game:GetService("CoreGui") then
+            print("[DARKZIN XIT] CoreGui acessível. Interface injetada com sucesso.")
+        end
+    end)
+    if not success then
+        warn("[DARKZIN XIT] Erro no diagnóstico: " .. tostring(err))
+    end
+end
+
+Diagnostic()
+
+-- Core Logic Loops
+game:GetService("RunService").Heartbeat:Connect(function()
+    local lp = game.Players.LocalPlayer
+    local char = lp.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+
+    -- Aimbot Logic
+    if Settings.Aimbot then
+        local target = nil
+        local dist = math.huge
+        for _, v in pairs(game.Players:GetPlayers()) do
+            if v ~= lp and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+                local d = (char.HumanoidRootPart.Position - v.Character.HumanoidRootPart.Position).Magnitude
+                if d < dist then dist = d; target = v end
+            end
+        end
+        if target then
+            game:GetService("Workspace").CurrentCamera.CFrame = CFrame.new(game:GetService("Workspace").CurrentCamera.CFrame.Position, target.Character.HumanoidRootPart.Position)
+        end
+    end
+
+    -- ESP Logic
+    -- ESP Logic
+    if Settings.ESP then
+        for _, v in pairs(game.Players:GetPlayers()) do
+            if v ~= lp and v.Character and v.Character:FindFirstChild("Head") then
+                local head = v.Character.Head
+                local bill = head:FindFirstChild("ESPBill") or Instance.new("BillboardGui")
+                bill.Name = "ESPBill"
+                bill.Parent = head
+                bill.Size = UDim2.new(0, 100, 0, 50)
+                bill.Adornee = head
+                bill.AlwaysOnTop = true
+                bill.ExtentsOffset = Vector3.new(0, 3, 0)
+                
+                local label = bill:FindFirstChild("TextLabel") or Instance.new("TextLabel", bill)
+                label.Size = UDim2.new(1, 0, 1, 0)
+                label.BackgroundTransparency = 1
+                label.Font = Enum.Font.GothamBold
+                label.TextSize = 14
+                
+                -- Role Detection
+                local role = "INNOCENT"
+                local color = COLORS.Innocent
+                
+                if v.Backpack:FindFirstChild("Knife") or (v.Character and v.Character:FindFirstChild("Knife")) then
+                    role = "MURDERER"
+                    color = COLORS.Murderer
+                elseif v.Backpack:FindFirstChild("Gun") or (v.Character and v.Character:FindFirstChild("Gun")) then
+                    role = "SHERIFF"
+                    color = COLORS.Sheriff
+                end
+                
+                label.Text = v.Name .. " [" .. role .. "]"
+                label.TextColor3 = color
+            end
+        end
+    else
+        for _, v in pairs(game.Players:GetPlayers()) do
+            if v.Character and v.Character:FindFirstChild("Head") and v.Character.Head:FindFirstChild("ESPBill") then
+                v.Character.Head.ESPBill:Destroy()
+            end
+        end
+    end
+
+    -- Auto Arm Logic
+    if Settings.AutoArm then
+        for _, item in pairs(game.Workspace:GetChildren()) do
+            if item:IsA("Tool") and (item.Name == "Gun" or item.Name == "Knife") then
+                local hrp = char.HumanoidRootPart
+                if (item.Handle.Position - hrp.Position).Magnitude < 15 then
+                    firetouchinterest(hrp, item.Handle, 0)
+                    firetouchinterest(hrp, item.Handle, 1)
+                end
+            end
+        end
+    end
+end)
